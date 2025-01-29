@@ -298,6 +298,7 @@ config FEATURE_SUID_CONFIG_QUIET
 config FEATURE_PREFER_APPLETS
 	bool "exec prefers applets"
 	default n
+	depends on !BUILD_INDIVIDUAL
 	help
 	This is an experimental option which directs applets about to
 	call 'exec' to try and find an applicable busybox applet before
