@@ -714,6 +714,10 @@ debug_kallsyms: .tmp_map$(last_kallsyms)
 
 endif # ifdef CONFIG_KALLSYMS
 
+# busybox object archive - includes all compiled objects
+libbusybox.a: $(busybox-all) FORCE
+	$(AR) rcs $@ $(foreach busybox-dir,$(busybox-alldirs),$(busybox-dir)/*.o)
+
 # busybox image - including updated kernel symbols
 busybox_unstripped: $(busybox-all) FORCE
 	$(call if_changed_rule,busybox__)
