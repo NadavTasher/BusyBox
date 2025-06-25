@@ -187,8 +187,8 @@ pid_t FAST_FUNC spawn(char **argv)
 	if (pid < 0) /* error */
 		return pid;
 	if (!pid) { /* child */
-		/* This macro is ok - it doesn't do NOEXEC/NOFORK tricks */
-		BB_EXECVP(argv[0], argv);
+		/* bb_execvp might do NOEXEC tricks */
+		bb_execvp(argv[0], argv);
 
 		/* We are (maybe) sharing a stack with blocked parent,
 		 * let parent know we failed and then exit to unblock parent
@@ -225,26 +225,27 @@ pid_t FAST_FUNC xspawn(char **argv)
 int FAST_FUNC spawn_and_wait(char **argv)
 {
 	int rc;
-#if ENABLE_FEATURE_PREFER_APPLETS && (NUM_APPLETS > 1)
+#if ENABLE_FEATURE_PREFER_APPLETS && (NUM_APPLETS > 1) && NOFORK_SUPPORT
 	int a = find_applet_by_name(argv[0]);
 
 	if (a >= 0) {
 		if (APPLET_IS_NOFORK(a))
 			return run_nofork_applet(a, argv);
-# if BB_MMU /* NOEXEC needs fork(), thus this is done only on MMU machines: */
-		if (APPLET_IS_NOEXEC(a)) {
-			fflush_all();
-			rc = fork();
-			if (rc) /* parent or error */
-				return wait4pid(rc);
-
-			/* child */
-			run_noexec_applet_and_exit(a, argv[0], argv);
-		}
-# endif
 	}
 #endif
+#if BB_MMU /* fork() only allowd on MMU machines */
+	fflush_all();
+	rc = fork();
+
+	/* child */
+	if (rc == 0)
+		bb_execvp_or_die(argv);
+#else /* !BB_MMU */
+	/* one call, (v)fork()->bb_execvp */
 	rc = spawn(argv);
+#endif
+
+	/* parent or error */
 	return wait4pid(rc);
 }
 
