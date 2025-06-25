@@ -154,7 +154,7 @@
 //config:config FEATURE_HTTPD_CGI
 //config:	bool "Support Common Gateway Interface (CGI)"
 //config:	default y
-//config:	depends on HTTPD
+//config:	depends on HTTPD && !FEATURE_PREFER_APPLETS
 //config:	help
 //config:	This option allows scripts and executables to be invoked
 //config:	when specific URLs are requested.
@@ -1703,10 +1703,14 @@ static void send_cgi_and_exit(
 			| (1 << SIGHUP)
 			, SIG_DFL);
 
-		/* _NOT_ execvp. We do not search PATH. argv[0] is a filename
-		 * without any dir components and will only match a file
-		 * in the current directory */
-		execv(argv[0], argv);
+		/* _NOT_ execvp (or bb_execv).
+		 * We do not search PATH, or prefer applet executions.
+		 * argv[0] is a filename without any dir components and will
+		 * only match a file in the current directory.
+		 * This feature depends on FEATURE_FORCE_APPLETS being disabled,
+		 * since FEATURE_FORCE_APPLETS forbids external binary executions.
+		 * bb_execv is used as a proxy to execv. */
+		bb_execv(argv[0], argv);
 		if (verbose)
 			bb_perror_msg("can't execute '%s'", argv[0]);
  error_execing_cgi:
