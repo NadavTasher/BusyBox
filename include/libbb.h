@@ -1235,22 +1235,31 @@ int file_is_executable(const char *name) FAST_FUNC;
 char *find_executable(const char *filename, const char **PATHp) FAST_FUNC;
 int executable_exists(const char *filename) FAST_FUNC;
 
-/* BB_EXECxx always execs (it's not doing NOFORK/NOEXEC stuff),
- * but it may exec busybox and call applet instead of searching PATH.
- */
-#if ENABLE_FEATURE_PREFER_APPLETS
-int BB_EXECVP(const char *file, char *const argv[]) FAST_FUNC;
-#define BB_EXECLP(prog,cmd,...) \
-	do { \
-		if (find_applet_by_name(prog) >= 0) \
-			execlp(bb_busybox_exec_path, cmd, __VA_ARGS__); \
-		execlp(prog, cmd, __VA_ARGS__); \
-	} while (0)
-#else
-#define BB_EXECVP(prog,cmd)     execvp(prog,cmd)
-#define BB_EXECLP(prog,cmd,...) execlp(prog,cmd,__VA_ARGS__)
-#endif
-void BB_EXECVP_or_die(char **argv) NORETURN FAST_FUNC;
+
+/* when FEATURE_PREFER_APPLETS is enabled, these functions act as a way
+ * to "exec" a built-in applet, either by NOEXEC or by re-exec. */
+int applet_execve(const char *name, char *const argv[], char *const envp[]) FAST_FUNC;
+
+/* these functions act as proxies to execve and execvpe, allowing for the
+ * use of bb_applet_execve and bb_applet_execvpe when required. */
+int bb_execv(const char *pathname, char *const argv[]) FAST_FUNC;
+int bb_execve(const char *pathname, char *const argv[], char *const envp[]) FAST_FUNC;
+int bb_execvp(const char *file, char *const argv[]) FAST_FUNC;
+int bb_execvpe(const char *file, char *const argv[], char *const envp[]) FAST_FUNC;
+
+/* bb_execvp_or_die is commonly used in functions that must
+ * exit if the execution of the desired program fails. */
+#define bb_execvp_or_die_msg(argv,msg) \
+({ \
+	bb_execvp((argv)[0], (argv)); \
+	/* SUSv3-mandated exit codes */ \
+	xfunc_error_retval = 2; \
+	if (errno == EACCES) xfunc_error_retval = 126; \
+	if (errno == ENOENT) xfunc_error_retval = 127; \
+	bb_perror_msg_and_die(msg, (argv)[0]); \
+})
+#define bb_execvp_or_die(argv) \
+	bb_execvp_or_die_msg(argv, "can't execute '%s'")
 
 #if !BB_MMU
 /* xvfork() can't be a _function_, return after vfork in child mangles stack
