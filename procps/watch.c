@@ -112,7 +112,7 @@ int watch_main(int argc UNUSED_PARAM, char **argv)
 		// TODO: 'real' watch pipes cmd's output to itself
 		// and does not allow it to overflow the screen
 		// (taking into account linewrap!)
-		system(cmd);
+		bb_system(cmd);
 		sleep_for_duration(period);
 	}
 	return 0; // gcc thinks we can reach this :)

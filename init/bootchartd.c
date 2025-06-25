@@ -315,7 +315,7 @@ static void finalize(char *tempdir, const char *prog, int process_accounting)
 	fclose(header_fp);
 
 	/* Package log files */
-	system(xasprintf("tar -zcf /var/log/bootlog.tgz header %s *.log", process_accounting ? "kernel_pacct" : ""));
+	bb_system(xasprintf("tar -zcf /var/log/bootlog.tgz header %s *.log", process_accounting ? "kernel_pacct" : ""));
 	/* Clean up (if we are not in detached tmpfs) */
 	if (tempdir) {
 		unlink("header");
