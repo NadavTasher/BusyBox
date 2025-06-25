@@ -575,6 +575,7 @@ static void NOINLINE vfork_compressor(int tar_fd, const char *gzip)
 	// On Linux, vfork never unpauses parent early, although standard
 	// allows for that. Do we want to waste bytes checking for it?
 #  define WAIT_FOR_CHILD 0
+	char *compressor_arg0, compressor_arg1[] = "-f", *compressor_argv[3];
 	volatile int vfork_exec_errno = 0;
 	struct fd_pair data;
 #  if WAIT_FOR_CHILD
@@ -614,11 +615,28 @@ static void NOINLINE vfork_compressor(int tar_fd, const char *gzip)
 		xmove_fd(tfd, 1);
 
 		/* exec gzip/bzip2/... program */
-		//BB_EXECLP(gzip, gzip, "-f", (char *)0); - WRONG for "xz",
-		// if xz is an enabled applet, it'll be a version which
-		// can only decompress. We do need to execute external
-		// program, not applet.
-		execlp(gzip, gzip, "-f", (char *)0);
+
+# if ENABLE_FEATURE_PREFER_APPLETS && ENABLE_XZ
+		/* if xz is an enabled applet, it'll be a version which
+		 * can only decompress. We can't use bb_execvp, since
+		 * it will execute the applet. */
+		if (strncmp(gzip, "xz", 2) == 0)
+			_exit_FAILURE();
+# endif
+
+		/* we need to duplicate gzip, since bb_execvp might
+		 * modify it. */
+		compressor_arg0 = xstrdup(gzip);
+
+		compressor_argv[0] = compressor_arg0;
+		compressor_argv[1] = compressor_arg1;
+		compressor_argv[2] = NULL;
+
+		/* This works for all other compressions. */
+		bb_execvp(compressor_argv[0], compressor_argv);
+
+		/* we need to free the copy of gzip */
+		free(compressor_arg0);
 
 		vfork_exec_errno = errno;
 		_exit_FAILURE();
