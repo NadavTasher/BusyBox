@@ -1733,29 +1733,6 @@ static int move_HFILEs_on_redirect(int fd, int avoid_fd)
 #endif
 	return 0; /* "not in the list" */
 }
-#if ENABLE_FEATURE_SH_STANDALONE && BB_MMU
-static void close_all_HFILE_list(void)
-{
-	HFILE *fl = G.HFILE_list;
-	while (fl) {
-		/* hfclose would also free HFILE object.
-		 * It is disastrous if we share memory with a vforked parent.
-		 * I'm not sure we never come here after vfork.
-		 * Therefore just close fd, nothing more.
-		 *
-		 * ">" instead of ">=": we don't close fd#0,
-		 * interactive shell uses hfopen(NULL) as stdin input
-		 * which has fl->fd == 0, but fd#0 gets redirected in pipes.
-		 * If we'd close it here, then e.g. interactive "set | sort"
-		 * with NOFORKed sort, would have sort's input fd closed.
-		 */
-		if (fl->fd > 0)
-			/*hfclose(fl); - unsafe */
-			close(fl->fd);
-		fl = fl->next_hfile;
-	}
-}
-#endif
 static int fd_in_HFILEs(int fd)
 {
 	HFILE *fl = G.HFILE_list;
@@ -7552,10 +7529,10 @@ static void re_execute_shell(char ***to_free, const char *s,
 	/* Don't propagate SIG_IGN to the child */
 	if (SPECIAL_JOBSTOP_SIGS != 0)
 		switch_off_special_sigs(G.special_sig_mask & SPECIAL_JOBSTOP_SIGS);
-	execve(bb_busybox_exec_path, argv, pp);
+	bb_execve("hush", argv, pp);
 	/* Fallback. Useful for init=/bin/hush usage etc */
 	if (argv[0][0] == '/')
-		execve(argv[0], argv, pp);
+		bb_execve(argv[0], argv, pp);
 	xfunc_error_retval = 127;
 	bb_simple_error_msg_and_die("can't re-execute the shell");
 }
@@ -8064,15 +8041,6 @@ static void restore_redirects(struct squirrel *sq)
 	/* If moved, G_interactive_fd stays on new fd, not restoring it */
 }
 
-#if ENABLE_FEATURE_SH_STANDALONE && BB_MMU
-static void close_saved_fds_and_FILE_fds(void)
-{
-	if (G_interactive_fd)
-		close(G_interactive_fd);
-	close_all_HFILE_list();
-}
-#endif
-
 static int internally_opened_fd(int fd, struct squirrel *sq)
 {
 	int i;
@@ -8574,7 +8542,7 @@ static void execvp_or_die(char **argv)
 	/* Don't propagate SIG_IGN to the child */
 	if (SPECIAL_JOBSTOP_SIGS != 0)
 		switch_off_special_sigs(G.special_sig_mask & SPECIAL_JOBSTOP_SIGS);
-	execvp(argv[0], argv);
+	bb_execvp(argv[0], argv);
 	e = 2;
 	if (errno == EACCES) e = 126;
 	if (errno == ENOENT) e = 127;
@@ -8799,43 +8767,7 @@ static NOINLINE void pseudo_exec_argv(nommu_save_t *nommu_save,
 		exec_builtin(&nommu_save->argv_from_re_execing, x, argv);
 	}
 
-#if ENABLE_FEATURE_SH_STANDALONE
-	/* Check if the command matches any busybox applets */
-	{
-		int a = find_applet_by_name(argv[0]);
-		if (a >= 0) {
-			if_command_vV_print_and_exit(opt_vV, argv[0], "an applet");
-# if BB_MMU /* see above why on NOMMU it is not allowed */
-			if (APPLET_IS_NOEXEC(a)) {
-				/* Do not leak open fds from opened script files etc.
-				 * Testcase: interactive "ls -l /proc/self/fd"
-				 * should not show tty fd open.
-				 */
-				close_saved_fds_and_FILE_fds();
-//FIXME: should also close saved redir fds
-//This casuses test failures in
-//redir_children_should_not_see_saved_fd_2.tests
-//redir_children_should_not_see_saved_fd_3.tests
-//if you replace "busybox find" with just "find" in them
-				/* Without this, "rm -i FILE" can't be ^C'ed: */
-				switch_off_special_sigs(G.special_sig_mask);
-				debug_printf_exec("running applet '%s'\n", argv[0]);
-				run_noexec_applet_and_exit(a, argv[0], argv);
-			}
-# endif
-			/* Re-exec ourselves */
-			debug_printf_exec("re-execing applet '%s'\n", argv[0]);
-			/* Don't propagate SIG_IGN to the child */
-			if (SPECIAL_JOBSTOP_SIGS != 0)
-				switch_off_special_sigs(G.special_sig_mask & SPECIAL_JOBSTOP_SIGS);
-			execv(bb_busybox_exec_path, argv);
-			/* If they called chroot or otherwise made the binary no longer
-			 * executable, fall through */
-		}
-	}
-#endif
-
-#if ENABLE_FEATURE_SH_STANDALONE || BB_MMU
+#if BB_MMU
  skip:
 #endif
 	if_command_vV_print_and_exit(opt_vV, argv[0], NULL);
