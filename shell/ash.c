@@ -8271,34 +8271,23 @@ static int builtinloc = -1;     /* index in path of %builtin, or -1 */
 
 
 static void
-tryexec(IF_FEATURE_SH_STANDALONE(int applet_no,) const char *cmd, char **argv, char **envp)
+tryexec(const char *cmd, char **argv, char **envp)
 {
-#if ENABLE_FEATURE_SH_STANDALONE
-	if (applet_no >= 0) {
-		if (APPLET_IS_NOEXEC(applet_no)) {
-			clearenv();
-			while (*envp)
-				putenv(*envp++);
-			popredir(/*drop:*/ 1);
-			run_noexec_applet_and_exit(applet_no, cmd, argv);
-		}
-		/* re-exec ourselves with the new arguments */
-		execve(bb_busybox_exec_path, argv, envp);
-		/* If they called chroot or otherwise made the binary no longer
-		 * executable, fall through */
-	}
-#endif
+	/* because we might not actually exec, redirected fds
+	 * might not close, since they have the CLOEXEC flag.
+	 * this ensures they are closed. */
+	popredir(/*drop:*/ 1);
 
  repeat:
 #ifdef SYSV
 	do {
-		execve(cmd, argv, envp);
+		bb_execve(cmd, argv, envp);
 	} while (errno == EINTR);
 #else
-	execve(cmd, argv, envp);
+	bb_execve(cmd, argv, envp);
 #endif
 
-	if (cmd != bb_busybox_exec_path && errno == ENOEXEC) {
+	if (strcmp(cmd, "ash") != 0 && errno == ENOEXEC) {
 		/* Run "cmd" as a shell script:
 		 * http://pubs.opengroup.org/onlinepubs/9699919799/utilities/V3_chap02.html
 		 * "If the execve() function fails with ENOEXEC, the shell
@@ -8316,12 +8305,15 @@ tryexec(IF_FEATURE_SH_STANDALONE(int applet_no,) const char *cmd, char **argv, c
 		 * to interpret foreign ELF binaries as shell scripts.
 		 */
 		argv[0] = (char*) cmd;
-		cmd = bb_busybox_exec_path;
+
 		/* NB: this is only possible because all callers of shellexec()
 		 * ensure that the argv[-1] slot exists!
-		 */
+		 * it is also required, as ash expects args to start at argv[1]. */
 		argv--;
 		argv[0] = (char*) "ash";
+
+		/* this makes the following repeat execute ash by re-exec or NOEXEC */
+		cmd = (char*) "ash";
 		goto repeat;
 	}
 }
@@ -8338,33 +8330,21 @@ static void shellexec(char *prog, char **argv, const char *path, int idx)
 	int e;
 	char **envp;
 	int exerrno;
-	int applet_no = -1; /* used only by FEATURE_SH_STANDALONE */
 
 	envp = listvars(VEXPORT, VUNSET, /*strlist:*/ NULL, /*end:*/ NULL);
-	if (strchr(prog, '/') != NULL
-#if ENABLE_FEATURE_SH_STANDALONE
-	 || (applet_no = find_applet_by_name(prog)) >= 0
-#endif
-	) {
-		tryexec(IF_FEATURE_SH_STANDALONE(applet_no,) prog, argv, envp);
-		if (applet_no >= 0) {
-			/* We tried execing ourself, but it didn't work.
-			 * Maybe /proc/self/exe doesn't exist?
-			 * Try $PATH search.
-			 */
-			goto try_PATH;
-		}
-		e = errno;
-	} else {
- try_PATH:
-		e = ENOENT;
-		while (padvance(&path, argv[0]) >= 0) {
-			cmdname = stackblock();
-			if (--idx < 0 && pathopt == NULL) {
-				tryexec(IF_FEATURE_SH_STANDALONE(-1,) cmdname, argv, envp);
-				if (errno != ENOENT && errno != ENOTDIR)
-					e = errno;
-			}
+	/* try executing using tryexec, which might execute applets
+	 * using NOEXEC logic, and might execute a matching binary.
+	 */
+	tryexec(prog, argv, envp);
+	e = errno;
+
+	/* fallback to PATH search and try executing using tryexec */
+	while (padvance(&path, argv[0]) >= 0) {
+		cmdname = stackblock();
+		if (--idx < 0 && pathopt == NULL) {
+			tryexec(cmdname, argv, envp);
+			if (errno != ENOENT && errno != ENOTDIR)
+				e = errno;
 		}
 	}
 
