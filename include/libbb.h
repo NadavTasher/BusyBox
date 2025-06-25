@@ -649,6 +649,8 @@ int sigprocmask2(int how, sigset_t *set) FAST_FUNC;
 /* Standard handler which just records signo */
 extern smallint bb_got_signal;
 void record_signo(int signo); /* not FAST_FUNC! */
+/* Resets all signal handlers just like exec() does */
+void reset_all_signals(void) FAST_FUNC;
 
 
 void xsetgid(gid_t gid) FAST_FUNC;

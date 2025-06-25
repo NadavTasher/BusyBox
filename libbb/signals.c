@@ -128,3 +128,29 @@ void FAST_FUNC signal_no_SA_RESTART_empty_mask(int sig, void (*handler)(int))
 	sa.sa_handler = handler;
 	sigaction_set(sig, &sa);
 }
+
+void FAST_FUNC reset_all_signals(void)
+{
+	struct sigaction sa;
+	memset(&sa, 0, sizeof(sa));
+
+	/* used as the default sigaction */
+	sa.sa_handler = SIG_DFL;
+
+	for (int sig = 1; sig < NSIG; ++sig) {
+		struct sigaction old;
+
+		/* returns 0 on success*/
+		if (sigaction(sig, NULL, &old) != 0)
+			continue;
+
+		if (old.sa_handler == SIG_IGN)
+			continue;
+
+		if (old.sa_handler == SIG_DFL)
+			continue;
+
+		/* change signal handler to default */
+		sigaction(sig, &sa, NULL);
+	}
+}
