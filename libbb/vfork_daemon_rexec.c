@@ -262,7 +262,7 @@ int FAST_FUNC bb_system(const char *command) {
 
 	/* we use sh because it might launch ash or hush,
 	 * and this is also what system() does. */
-	system_argv[0] = xstrdup("sh");
+	system_argv[0] = xstrdup(get_shell_name());
 	system_argv[1] = xstrdup("-c");
 
 	/* we must ensure command stays unchanged. */
