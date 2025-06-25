@@ -442,6 +442,8 @@ void *mmap_read(int fd, size_t size) FAST_FUNC;
 void *mmap_anon(size_t size) FAST_FUNC;
 void *xmmap_anon(size_t size) FAST_FUNC;
 
+char **clone_string_array(char *const *original) FAST_FUNC;
+
 #if defined(__x86_64__) || defined(i386)
 # define BB_ARCH_FIXED_PAGESIZE 4096
 #elif defined(__arm__) /* only 32bit, 64bit ARM has variable page size */
