@@ -288,11 +288,16 @@ int FAST_FUNC bb_system(const char *command) {
 #if !BB_MMU
 void FAST_FUNC re_exec(char **argv)
 {
+	/* create a copy of argv[0], we'll use it for exec */
+	char *name = xstrdup(argv[0]);
+
 	/* high-order bit of first char in argv[0] is a hidden
 	 * "we have (already) re-execed, don't do it again" flag */
 	argv[0][0] |= 0x80;
-	execv(bb_busybox_exec_path, argv);
-	bb_perror_msg_and_die("can't execute '%s'", bb_busybox_exec_path);
+
+	/* if required, bb_execvp with re-exec bb_busybox_exec_path */
+	bb_execv(name, argv);
+	bb_perror_msg_and_die("can't execute '%s'", name);
 }
 
 pid_t FAST_FUNC fork_or_rexec(char **argv)
