@@ -581,6 +581,7 @@ int ndelay_off(int fd) FAST_FUNC;
 void close_on_exec_on(int fd) FAST_FUNC;
 void xdup2(int, int) FAST_FUNC;
 void xmove_fd(int, int) FAST_FUNC;
+void close_cloexec_fds(void) FAST_FUNC;
 
 
 DIR *xopendir(const char *path) FAST_FUNC;

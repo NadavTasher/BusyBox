@@ -46,6 +46,16 @@ void FAST_FUNC close_on_exec_on(int fd)
 	fcntl(fd, F_SETFD, FD_CLOEXEC);
 }
 
+void FAST_FUNC close_cloexec_fds(void)
+{
+	for (int fd = 0; fd < 1024; ++fd) {
+		/* if the FD has the FD_CLOEXEC flag, we need to
+		 * close it. */
+		if (fcntl(fd, F_GETFD) & FD_CLOEXEC)
+			close(fd);
+	}
+}
+
 char* FAST_FUNC strncpy_IFNAMSIZ(char *dst, const char *src)
 {
 #ifndef IFNAMSIZ
