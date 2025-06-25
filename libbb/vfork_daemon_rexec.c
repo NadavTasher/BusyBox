@@ -249,6 +249,42 @@ int FAST_FUNC spawn_and_wait(char **argv)
 	return wait4pid(rc);
 }
 
+int FAST_FUNC bb_system(const char *command) {
+#if ENABLE_FEATURE_PREFER_APPLETS
+	int exit_code;
+	char *system_argv[4];
+
+	/* when command is NULL, return a nonzero value,
+	 * This indicates there is a shell available.
+	 */
+	if (command == NULL)
+		return 1;
+
+	/* we use sh because it might launch ash or hush,
+	 * and this is also what system() does. */
+	system_argv[0] = xstrdup("sh");
+	system_argv[1] = xstrdup("-c");
+
+	/* we must ensure command stays unchanged. */
+	system_argv[2] = xstrdup(command);
+
+	/* terminate array for good measure */
+	system_argv[3] = NULL;
+
+	/* spawn the shell and wait for it to return. */
+	exit_code = spawn_and_wait(system_argv);
+
+	/* free the duplicated strings */
+	free(system_argv[0]);
+	free(system_argv[1]);
+	free(system_argv[2]);
+
+	return exit_code;
+#else
+	return system(command);
+#endif
+}
+
 #if !BB_MMU
 void FAST_FUNC re_exec(char **argv)
 {
