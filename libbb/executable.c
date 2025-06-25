@@ -7,6 +7,7 @@
  * Licensed under GPLv2 or later, see file LICENSE in this source tree.
  */
 #include "libbb.h"
+#include "busybox.h" /* for APPLET_IS_NOEXEC */
 
 /* check if path points to an executable file;
  * return 1 if found;
@@ -78,20 +79,114 @@ int FAST_FUNC executable_exists(const char *name)
 	return ret != NULL;
 }
 
-#if ENABLE_FEATURE_PREFER_APPLETS
-/* just like the real execvp, but try to launch an applet named 'file' first */
-int FAST_FUNC BB_EXECVP(const char *file, char *const argv[])
+int FAST_FUNC applet_execve(const char *name, char *const argv[], char *const envp[])
 {
-	if (find_applet_by_name(file) >= 0)
-		execvp(bb_busybox_exec_path, argv);
-	return execvp(file, argv);
+#if ENABLE_FEATURE_PREFER_APPLETS
+	/* used to copy argv to heap */
+	char **copied_argv;
+
+# if ENABLE_FEATURE_TRY_BASENAME_APPLETS
+	/* find applet by basename */
+	int applet = find_applet_by_name(bb_basename(name));
+# else
+	/* find applet by given name*/
+	int applet = find_applet_by_name(name);
+# endif
+
+	/* no matching applet was found */
+	if (applet < 0) {
+		errno = ENOENT;
+		return -1;
+	}
+
+	/* NOMMU targets only support vfork().
+	 * since vfork() requires the child to exec() or _exit() for the
+	 * parent to resume, running applets with NOEXEC and vfork()
+	 * may result in deadlocks, as exec() will never be called.
+	 * these applets must be executed using the exec syscall. */
+	if (!BB_MMU || !APPLET_IS_NOEXEC(applet))
+		return execve(bb_busybox_exec_path, argv, envp);
+
+	/* since run_noexec_applet_and_exit takes char **argv,
+	 * we need to copy argv to a new heap-allocated array. */
+	copied_argv = clone_string_array(argv);
+
+	/* since exec will not be called, we need to manually
+	 * reset some signal handlers. */
+	reset_all_signals();
+
+	/* since exec will not be called, we then need to close
+	 * all FDs with FD_CLOEXEC manually. */
+	close_cloexec_fds();
+
+	/* if non-default environ was passed, replace environ */
+	if (envp != environ) {
+		clearenv();
+
+		/* envp is NULL terminated. */
+		while (*envp)
+			putenv(*envp++);
+	}
+
+	/* this should never return. */
+	run_noexec_applet_and_exit(applet, name, copied_argv);
+
+	/* free duplicated argv array */
+	while (*copied_argv)
+		free(*copied_argv++);
+
+	/* if this is reached, error out */
+	errno = ENOEXEC;
+	return -1;
+#else
+	/* applets are not prefered */
+	return -1;
+#endif
 }
+
+/* just like the real execve, but we might try to launch an applet named 'pathname' first */
+int FAST_FUNC bb_execve(const char *pathname, char *const argv[], char *const envp[])
+{
+	/* try executing using applet_execve */
+	int status = applet_execve(pathname, argv, envp);
+
+	/* if status is valid, should not fall back */
+	if (status >= 0)
+		return status;
+
+#if ENABLE_FEATURE_FORCE_APPLETS
+	/* no external programs are allowed, error out */
+	errno = ENOENT;
+	return -1;
 #endif
 
-void FAST_FUNC BB_EXECVP_or_die(char **argv)
+	/* fall back to execve */
+	return execve(pathname, argv, envp);
+}
+
+/* just like bb_execve, but we keep the existing environment by passing environ */
+int FAST_FUNC bb_execv(const char *pathname, char *const argv[])
 {
-	BB_EXECVP(argv[0], argv);
-	/* SUSv3-mandated exit codes */
-	xfunc_error_retval = (errno == ENOENT) ? 127 : 126;
-	bb_perror_msg_and_die("can't execute '%s'", argv[0]);
+	return bb_execve(pathname, argv, environ);
+}
+
+/* just like bb_execve, but we pass the basename of file and fall back to execvp */
+int FAST_FUNC bb_execvp(const char *file, char *const argv[])
+{
+	/* try executing using applet_execve with the basename of file.
+	 * this emulates a PATH search, since applet names are always basenames. */
+	int status = applet_execve(bb_basename(file), argv, environ);
+
+	/* if status is valid, should not fall back */
+	if (status >= 0)
+		return status;
+
+#if ENABLE_FEATURE_FORCE_APPLETS
+	/* no external programs are allowed, error out */
+	errno = ENOENT;
+	return -1;
+#endif
+
+	/* fall back to execvp */
+	return execvp(file, argv);
 }

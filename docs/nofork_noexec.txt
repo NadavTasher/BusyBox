@@ -14,7 +14,8 @@ Applet will be subject to NOFORK/NOEXEC tricks only if it is marked
 as such in applets.src.h or in their inline "//applet:" directives.
 
 In C, if you want to call a program and wait for it, use
-spawn_and_wait(argv), BB_EXECVP(prog,argv) or BB_EXECLP(prog,argv0,...).
+spawn_and_wait(argv), bb_system(command), bb_execv(path,argv),
+execve(path,argv,envp), bb_execvp(prog,argv) or bb_execvpe(prog,argv,envp).
 They check whether program name is an applet name and optionally
 do NOFORK/NOEXEC thing depending on configuration.
 
@@ -24,9 +25,19 @@ do NOFORK/NOEXEC thing depending on configuration.
 FEATURE_PREFER_APPLETS
   Globally enables NOFORK/NOEXEC tricks for such programs as xargs
   and find:
-  BB_EXECVP(cmd, argv) will try to exec /proc/self/exe
-  if command's name matches some applet name;
+  bb_execXX functions will try to exec /proc/self/exe or execute the main
+  function of the applet directly when possible, if command's name
+  matches some applet name.
   spawn_and_wait(argv) will do NOFORK/NOEXEC tricks
+
+FEATURE_TRY_BASENAME_APPLETS
+  Makes bb_execXX functions try the basename of the pathname given,
+  essentially faking a PATH lookup for applets.
+
+FEATURE_FORCE_APPLETS
+  Globally disables the fallback to exec in all bb_execXX functions.
+  This makes busybox program executions constrained to applets,
+  essentially making busybox some kind of sandbox.
 
 //TODO: the above two things probably should have separate options?
 

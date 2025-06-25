@@ -310,6 +310,26 @@ config FEATURE_PREFER_APPLETS
 	problems in chroot jails without mounted /proc and with ps/top
 	(command name can be shown as 'exe' for applets started this way).
 
+config FEATURE_TRY_BASENAME_APPLETS
+	bool "fake PATH lookup using basename"
+	default n
+	depends on FEATURE_PREFER_APPLETS
+	help
+	This makes applet lookup try the basename of the applet name given,
+	essentially allowing applet execution by absolute path.
+
+	This feature extends the "exec prefers applets" feature.
+
+config FEATURE_FORCE_APPLETS
+	bool "only use applets"
+	default n
+	depends on FEATURE_PREFER_APPLETS
+	help
+	This is an experimental option which makes exec calls fail when trying
+	to execute external binaries that are not part of busybox.
+
+	This feature extends the "exec prefers applets" feature.
+
 config BUSYBOX_EXEC_PATH
 	string "Path to busybox executable"
 	default "/proc/self/exe"
