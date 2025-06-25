@@ -445,11 +445,20 @@ int bootchartd_main(int argc UNUSED_PARAM, char **argv)
 	}
 
 	if (cmd == CMD_PID1) {
+		char init_arg0[] = "init", *init_argv[2] = {init_arg0, NULL};
+
 		char *bootchart_init = getenv("bootchart_init");
-		if (bootchart_init)
-			execl(bootchart_init, bootchart_init, NULL);
-		execl("/init", "init", NULL);
-		execl("/sbin/init", "init", NULL);
+		if (bootchart_init) {
+			char *bootchart_arg0 = xstrdup(bootchart_init), *bootchart_argv[2] = {bootchart_arg0, NULL};
+			bb_execvp(bootchart_arg0, bootchart_argv);
+
+			/* free copied argument */
+			free(bootchart_arg0);
+		}
+
+		/* fallback, we are calling different init binaries */
+		bb_execvp("/init", init_argv);
+		bb_execvp("/sbin/init", init_argv);
 		bb_perror_msg_and_die("can't execute '%s'", "/sbin/init");
 	}
 
@@ -457,7 +466,7 @@ int bootchartd_main(int argc UNUSED_PARAM, char **argv)
 		pid_t pid = xvfork();
 		if (pid == 0) { /* child */
 			argv += 2;
-			BB_EXECVP_or_die(argv);
+			bb_execvp_or_die(argv);
 		}
 		/* parent */
 		waitpid(pid, NULL, 0);

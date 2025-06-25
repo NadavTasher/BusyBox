@@ -154,5 +154,5 @@ int timeout_main(int argc UNUSED_PARAM, char **argv)
 	argv[0] = sv1;
 	argv[1] = sv2;
 #endif
-	BB_EXECVP_or_die(argv);
+	bb_execvp_or_die(argv);
 }

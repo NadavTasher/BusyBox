@@ -629,6 +629,6 @@ int start_stop_daemon_main(int argc UNUSED_PARAM, char **argv)
 	 * strace -oLOG start-stop-daemon -S -x /bin/usleep -a qwerty 500000
 	 * should exec "/bin/usleep", but argv[0] should be "qwerty":
 	 */
-	execvp(execname, argv);
+	bb_execvp(execname, argv);
 	bb_perror_msg_and_die("can't execute '%s'", startas);
 }

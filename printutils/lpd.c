@@ -202,7 +202,7 @@ int lpd_main(int argc UNUSED_PARAM, char **argv)
 			// helper should not talk over network.
 			// this call reopens stdio fds to "/dev/null".
 			bb_daemon_helper(DAEMON_DEVNULL_STDIO);
-			BB_EXECVP_or_die(argv);
+			bb_execvp_or_die(argv);
 		}
 
 		// validate input.

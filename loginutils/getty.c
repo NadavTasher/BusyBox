@@ -552,6 +552,7 @@ int getty_main(int argc UNUSED_PARAM, char **argv)
 	int n;
 	pid_t pid, tsid;
 	char *logname;
+	char *login_arg0, login_arg1[] = "--", *login_arg2, *login_argv[4];
 
 	INIT_G();
 	G.login = _PATH_LOGIN;    /* default login program */
@@ -732,6 +733,20 @@ int getty_main(int argc UNUSED_PARAM, char **argv)
 	/* We use PATH because we trust that root doesn't set "bad" PATH,
 	 * and getty is not suid-root applet */
 	/* With -n, logname == NULL, and login will ask for username instead */
-	BB_EXECLP(G.login, G.login, "--", logname, (char *)0);
-	bb_error_msg_and_die("can't execute '%s'", G.login);
+
+	/* we need to copy some arguments since bb_execvp
+	 * might modify the strings */
+	login_arg0 = xstrdup(G.login);
+	login_arg2 = xstrdup(logname);
+
+	login_argv[0] = login_arg0;
+	login_argv[1] = login_arg1;
+	login_argv[2] = login_arg2;
+	login_argv[3] = NULL;
+
+	bb_execvp_or_die(login_argv);
+
+	/* free copied arguments */
+	free(login_arg0);
+	free(login_arg2);
 }

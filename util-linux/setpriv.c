@@ -331,5 +331,5 @@ int setpriv_main(int argc UNUSED_PARAM, char **argv)
 
 	if (!argv[0])
 		bb_show_usage();
-	BB_EXECVP_or_die(argv);
+	bb_execvp_or_die(argv);
 }

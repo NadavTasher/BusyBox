@@ -180,7 +180,7 @@ static int parse(const char *boundary, char **argv)
 					xsetenv("CHARSET", charset);
 					xsetenv("ENCODING", encoding);
 					xsetenv("FILENAME", filename);
-					BB_EXECVP_or_die(argv);
+					bb_execvp_or_die(argv);
 				}
 				/* parent will write to fd[1] */
 				close(fd[0]);

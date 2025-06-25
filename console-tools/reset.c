@@ -58,7 +58,7 @@ int reset_main(int argc UNUSED_PARAM, char **argv UNUSED_PARAM)
 #else
 		/* Make sure stdout gets drained before we execvp */
 		fflush_all();
-		execvp("stty", (char**)args);
+		bb_execvp("stty", (char**)args);
 #endif
 	}
 	return EXIT_SUCCESS;

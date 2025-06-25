@@ -485,5 +485,5 @@ int chpst_main(int argc UNUSED_PARAM, char **argv)
 	if (opt & OPT_2)
 		close(STDERR_FILENO);
 
-	BB_EXECVP_or_die(argv);
+	bb_execvp_or_die(argv);
 }

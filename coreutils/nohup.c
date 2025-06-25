@@ -94,5 +94,5 @@ int nohup_main(int argc UNUSED_PARAM, char **argv)
 	signal(SIGHUP, SIG_IGN);
 
 	argv++;
-	BB_EXECVP_or_die(argv);
+	bb_execvp_or_die(argv);
 }

@@ -568,7 +568,7 @@ make_new_session(
 	 * NB: sock is either 0 or has CLOEXEC set on it.
 	 * fd has CLOEXEC set on it too. These two fds will be closed here.
 	 */
-	BB_EXECVP(G.loginpath, (char **)login_argv);
+	bb_execvp(G.loginpath, (char **)login_argv);
 	/* _exit is safer with vfork, and we shouldn't send message
 	 * to remote clients anyway */
 	_exit_FAILURE(); /*bb_perror_msg_and_die("execv %s", G.loginpath);*/

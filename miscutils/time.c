@@ -416,7 +416,7 @@ static void run_command(char *const *cmd, resource_t *resp)
 	pid = xvfork();
 	if (pid == 0) {
 		/* Child */
-		BB_EXECVP_or_die((char**)cmd);
+		bb_execvp_or_die((char**)cmd);
 	}
 
 	/* Have signals kill the child but not self (if possible).  */

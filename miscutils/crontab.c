@@ -44,6 +44,7 @@ static void edit_file(const struct passwd *pas, const char *file)
 {
 	const char *ptr;
 	pid_t pid;
+	char *edit_arg0, *edit_arg1, *edit_argv[3];
 
 	pid = xvfork();
 	if (pid) { /* parent */
@@ -64,8 +65,16 @@ static void edit_file(const struct passwd *pas, const char *file)
 			ptr = "vi";
 	}
 
-	BB_EXECLP(ptr, ptr, file, NULL);
-	bb_perror_msg_and_die("can't execute '%s'", ptr);
+	edit_arg0 = xstrdup(ptr);
+	edit_arg1 = xstrdup(file);
+
+	edit_argv[0] = edit_arg0;
+	edit_argv[1] = edit_arg1;
+	edit_argv[2] = NULL;
+	bb_execvp_or_die(edit_argv);
+
+	free(edit_arg0);
+	free(edit_arg1);
 }
 
 int crontab_main(int argc, char **argv) MAIN_EXTERNALLY_VISIBLE;

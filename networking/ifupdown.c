@@ -1146,6 +1146,7 @@ static void set_environ(struct interface_defn_t *iface, const char *mode, const 
 
 static int doit(char *str)
 {
+	char *shell_arg0, shell_arg1[] = "-c", *shell_arg2, *shell_argv[4];
 	if (option_mask32 & (OPT_no_act|OPT_verbose)) {
 		puts(str);
 	}
@@ -1158,7 +1159,19 @@ static int doit(char *str)
 		if (child < 0) /* failure */
 			return 0;
 		if (child == 0) { /* child */
-			execle(G.shell, G.shell, "-c", str, (char *) NULL, G.my_environ);
+			shell_arg0 = xstrdup(G.shell);
+			shell_arg2 = xstrdup(str);
+
+			shell_argv[0] = shell_arg0;
+			shell_argv[1] = shell_arg1;
+			shell_argv[2] = shell_arg2;
+			shell_argv[3] = NULL;
+
+			bb_execve(shell_argv[0], shell_argv, G.my_environ);
+
+			free(shell_arg0);
+			free(shell_arg2);
+
 			_exit(127);
 		}
 		safe_waitpid(child, &status, 0);
@@ -1244,7 +1257,7 @@ static int popen2(FILE **in, FILE **out, char *command, char *param)
 		close(outfd.rd);
 		xmove_fd(infd.rd, 0);
 		xmove_fd(outfd.wr, 1);
-		BB_EXECVP_or_die(argv);
+		bb_execvp_or_die(argv);
 	}
 	/* parent */
 	close(infd.rd);

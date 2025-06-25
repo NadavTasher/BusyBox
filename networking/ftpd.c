@@ -733,8 +733,7 @@ popen_ls(const char *opt)
 		}
 		/* Child expects directory to list on fd #3 */
 		xmove_fd(cur_fd, 3);
-		execv(bb_busybox_exec_path, (char**) argv);
-		_exit(127);
+		bb_execvp_or_die((char **) argv);
 #endif
 	}
 

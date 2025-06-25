@@ -275,7 +275,7 @@ static int doexec(char **proggie)
 	dup2(0, 1);
 	/* dup2(0, 2); - do we *really* want this? NO!
 	 * exec'ed prog can do it yourself, if needed */
-	BB_EXECVP_or_die(proggie);
+	bb_execvp_or_die(proggie);
 }
 
 /* connect_w_timeout:

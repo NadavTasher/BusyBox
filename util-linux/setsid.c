@@ -78,5 +78,5 @@ int setsid_main(int argc UNUSED_PARAM, char **argv)
 		ioctl(0, TIOCSCTTY, 1);
 	}
 
-	BB_EXECVP_or_die(argv);
+	bb_execvp_or_die(argv);
 }

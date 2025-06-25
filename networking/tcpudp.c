@@ -609,7 +609,7 @@ int tcpudpsvd_main(int argc UNUSED_PARAM, char **argv)
 	ssl_io(0, argv);
 	bb_perror_msg_and_die("can't execute '%s'", argv[0]);
 #else
-	BB_EXECVP_or_die(argv);
+	bb_execvp_or_die(argv);
 #endif
 }
 

@@ -321,7 +321,7 @@ int taskset_main(int argc UNUSED_PARAM, char **argv)
 		if (!*argv)
 			bb_show_usage();
 		process_pid_str(NULL, opts, aff);
-		BB_EXECVP_or_die(argv);
+		bb_execvp_or_die(argv);
 	}
 
 	pid_str = aff;
