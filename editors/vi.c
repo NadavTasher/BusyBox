@@ -2956,7 +2956,7 @@ static void colon(char *buf)
 			goto ret;
 		go_bottom_and_clear_to_eol();
 		cookmode();
-		retcode = system(exp);	// run the cmd
+		retcode = bb_system(exp);	// run the cmd
 		if (retcode)
 			printf("\nshell returned %i\n\n", retcode);
 		rawmode();

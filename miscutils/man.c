@@ -157,7 +157,7 @@ static int run_pipe(char *man_filename, int man, int level)
 	} else {
 		cmd = xstrdup(G.pager);
 	}
-	system(cmd);
+	bb_system(cmd);
 	free(cmd);
 	return 1;
 }

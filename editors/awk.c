@@ -3479,7 +3479,7 @@ static var *evaluate(node *op, var *res)
 			case F_sy:
 				fflush_all();
 				R_d = (ENABLE_FEATURE_ALLOW_EXEC && L.s && *L.s)
-						? (system(L.s) >> 8) : 0;
+						? (bb_system(L.s) >> 8) : 0;
 				break;
 
 			case F_ff:

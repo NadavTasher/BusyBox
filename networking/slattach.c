@@ -222,7 +222,7 @@ int slattach_main(int argc UNUSED_PARAM, char **argv)
 
 	/* Execute command on hangup */
 	if (opt & OPT_c_extcmd)
-		system(extcmd);
+		bb_system(extcmd);
 
 	/* Restore states and exit */
 	restore_state_and_exit(EXIT_SUCCESS);

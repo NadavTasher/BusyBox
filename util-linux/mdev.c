@@ -804,7 +804,7 @@ static void make_device(char *device_name, char *path, int operation)
 			char *s = xasprintf("%s=%s", "MDEV", node_name);
 			putenv(s);
 			dbg1("running: %s", command);
-			if (system(command) == -1)
+			if (bb_system(command) == -1)
 				bb_perror_msg("can't run '%s'", command);
 			bb_unsetenv_and_free(s);
 		}

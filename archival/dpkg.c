@@ -1268,7 +1268,7 @@ static void run_package_script_or_die(const char *package_name, const char *scri
 	script_path = xasprintf("/var/lib/dpkg/info/%s.%s", package_name, script_type);
 
 	/* If the file doesn't exist it isn't fatal */
-	result = access(script_path, F_OK) ? EXIT_SUCCESS : system(script_path);
+	result = access(script_path, F_OK) ? EXIT_SUCCESS : bb_system(script_path);
 	free(script_path);
 	if (result)
 		bb_error_msg_and_die("%s failed, exit code %d", script_type, result);
