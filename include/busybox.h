@@ -23,7 +23,11 @@ extern const uint8_t applet_install_loc[] ALIGN1;
  || ENABLE_FEATURE_SH_STANDALONE \
  || ENABLE_FEATURE_SH_NOFORK
 # define APPLET_IS_NOFORK(i) (applet_flags[(i)/4] & (1 << (2 * ((i)%4))))
-# define APPLET_IS_NOEXEC(i) (applet_flags[(i)/4] & (1 << ((2 * ((i)%4))+1)))
+# if ENABLE_FEATURE_ALWAYS_NOEXEC
+#  define APPLET_IS_NOEXEC(i) 1
+# else
+#  define APPLET_IS_NOEXEC(i) (applet_flags[(i)/4] & (1 << ((2 * ((i)%4))+1)))
+# endif
 #else
 # define APPLET_IS_NOFORK(i) 0
 # define APPLET_IS_NOEXEC(i) 0

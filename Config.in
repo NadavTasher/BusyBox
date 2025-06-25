@@ -331,6 +331,18 @@ config FEATURE_FORCE_APPLETS
 
 	This feature extends the "exec prefers applets" feature.
 
+config FEATURE_ALWAYS_NOEXEC
+	bool "all applets support NOEXEC (experimental)"
+	default n
+	depends on FEATURE_PREFER_APPLETS && !NOMMU
+	help
+	This is an experimental option which makes all applets support NOEXEC
+	invocation.
+	There are good reasons for why applets are not marked as NOEXEC,
+	but for some usecases these reasons do not apply.
+
+	This feature extends the "exec prefers applets" feature.
+
 config BUSYBOX_EXEC_PATH
 	string "Path to busybox executable"
 	default "/proc/self/exe"
