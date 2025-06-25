@@ -1524,7 +1524,7 @@ int inetd_main(int argc UNUSED_PARAM, char **argv)
 			sigaction_set(SIGPIPE, &saved_pipe_handler);
 			restore_sigmask(&omask);
 			dbg("execing:'%s'\n", sep->se_program);
-			BB_EXECVP(sep->se_program, sep->se_argv);
+			bb_execvp(sep->se_program, sep->se_argv);
 			bb_perror_msg("can't execute '%s'", sep->se_program);
  do_exit1:
 			/* eat packet in udp case */
@@ -1565,7 +1565,7 @@ static void FAST_FUNC echo_stream(int s, servtab_t *sep UNUSED_PARAM)
 	/* no error messages please... */
 	close(STDERR_FILENO);
 	xopen(bb_dev_null, O_WRONLY);
-	BB_EXECVP("cat", (char**)cat_args);
+	bb_execvp("cat", (char**)cat_args);
 	/* on failure we return to main, which does exit(EXIT_FAILURE) */
 # endif
 }
@@ -1603,7 +1603,7 @@ static void FAST_FUNC discard_stream(int s, servtab_t *sep UNUSED_PARAM)
 	xopen(bb_dev_null, O_WRONLY);
 	/* no error messages please... */
 	xdup2(STDOUT_FILENO, STDERR_FILENO);
-	BB_EXECVP("cat", (char**)cat_args);
+	bb_execvp("cat", (char**)cat_args);
 	/* on failure we return to main, which does exit(EXIT_FAILURE) */
 # endif
 }

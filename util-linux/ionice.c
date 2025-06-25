@@ -110,7 +110,7 @@ int ionice_main(int argc UNUSED_PARAM, char **argv)
 			if (!(opt & OPT_t))
 				bb_perror_msg_and_die("ioprio_%cet", 's');
 		if (argv[0]) {
-			BB_EXECVP_or_die(argv);
+			bb_execvp_or_die(argv);
 		}
 	}
 

@@ -393,6 +393,7 @@ static void processorstart(struct logdir *ld)
 {
 	char sv_ch;
 	int pid;
+	char *shell_arg0, shell_arg1[] = "-c", *shell_arg2, *shell_argv[4];
 
 	if (!ld->processor) return;
 	if (ld->ppid) {
@@ -453,7 +454,19 @@ static void processorstart(struct logdir *ld)
 		fd = xopen("newstate", O_WRONLY|O_NDELAY|O_TRUNC|O_CREAT);
 		xmove_fd(fd, 5);
 
-		execl(G.shell, G.shell, "-c", ld->processor, (char*) NULL);
+		shell_arg0 = xstrdup(G.shell);
+		shell_arg2 = xstrdup(ld->processor);
+
+		shell_argv[0] = shell_arg0;
+		shell_argv[1] = shell_arg1;
+		shell_argv[2] = shell_arg2;
+		shell_argv[3] = NULL;
+
+		bb_execvp(shell_argv[0], shell_argv);
+
+		free(shell_arg0);
+		free(shell_arg2);
+
 		bb_perror_msg_and_die(FATAL"can't %s processor %s", "run", ld->name);
 	}
 	ld->fnsave[26] = sv_ch; /* ...restore */

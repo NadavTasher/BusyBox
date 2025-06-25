@@ -740,7 +740,7 @@ static int spawn_https_helper_openssl(const char *host, unsigned port)
 		}
 		//[12] (or earlier) is NULL terminator
 
-		BB_EXECVP(argv[0], argv);
+		bb_execvp(argv[0], argv);
 		xmove_fd(3, 2);
 # if ENABLE_FEATURE_WGET_HTTPS
 		child_failed = 1;
@@ -809,8 +809,7 @@ static void spawn_ssl_client(const char *host, int network_fd, int flags)
 			argv[3] = servername;
 			argv[4] = (flags & TLSLOOP_EXIT_ON_LOCAL_EOF ? (char*)"-e" : NULL);
 			argv[5] = NULL;
-			BB_EXECVP(argv[0], argv);
-			bb_perror_msg_and_die("can't execute '%s'", argv[0]);
+			bb_execvp_or_die(argv);
 		}
 		/* notreached */
 	}

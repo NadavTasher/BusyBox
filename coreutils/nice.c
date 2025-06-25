@@ -64,5 +64,5 @@ int nice_main(int argc UNUSED_PARAM, char **argv)
 		}
 	}
 
-	BB_EXECVP_or_die(argv);
+	bb_execvp_or_die(argv);
 }

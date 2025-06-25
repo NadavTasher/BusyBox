@@ -280,6 +280,7 @@ static unsigned custom(struct svdir *s, char c)
 	int w;
 	char a[10];
 	struct stat st;
+	char *exec_argv[2];
 
 	if (s->islog)
 		return 0;
@@ -296,7 +297,11 @@ static unsigned custom(struct svdir *s, char c)
 				/* child */
 				if (haslog && dup2(logpipe.wr, 1) == -1)
 					warn2_cannot("setup stdout for ", a);
-				execl(a, a, (char *) NULL);
+
+				exec_argv[0] = a;
+				exec_argv[1] = NULL;
+
+				bb_execvp(exec_argv[0], exec_argv);
 				fatal2_cannot("run ", a);
 			}
 			/* parent */
@@ -391,7 +396,7 @@ static void startservice(struct svdir *s)
 		signal(SIGTERM, SIG_DFL);
 		sig_unblock(SIGCHLD);
 		sig_unblock(SIGTERM);
-		execv(arg[0], (char**) arg);
+		bb_execvp(arg[0], (char**) arg);
 		fatal2_cannot(s->islog ? "start log/" : "start ", arg[0]);
 	}
 	/* parent */

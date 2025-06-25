@@ -204,5 +204,5 @@ int chrt_main(int argc UNUSED_PARAM, char **argv)
 	if (!argv[0]) /* "-p PRIO PID [...]" */
 		goto print_rt_info;
 
-	BB_EXECVP_or_die(argv);
+	bb_execvp_or_die(argv);
 }

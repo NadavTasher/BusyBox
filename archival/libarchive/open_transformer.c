@@ -139,8 +139,7 @@ void FAST_FUNC fork_transformer(int fd, const char *transform_prog)
 			argv[1] = (char*)"-cf";
 			argv[2] = (char*)"-";
 			argv[3] = NULL;
-			BB_EXECVP(transform_prog, argv);
-			bb_perror_msg_and_die("can't execute '%s'", transform_prog);
+			bb_execvp_or_die(argv);
 		}
 #endif
 		/* notreached */

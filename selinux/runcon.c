@@ -157,5 +157,5 @@ int runcon_main(int argc UNUSED_PARAM, char **argv)
 		bb_error_msg_and_die("can't set up security context '%s'",
 				context_str(con));
 
-	BB_EXECVP_or_die(argv);
+	bb_execvp_or_die(argv);
 }

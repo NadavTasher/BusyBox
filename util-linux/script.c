@@ -60,8 +60,10 @@ int script_main(int argc UNUSED_PARAM, char **argv)
 	const char *str_t = NULL;
 	const char *fname = "typescript";
 	const char *shell;
+	char *shell_copy;
 	char shell_opt[] = "-i";
 	char *shell_arg = NULL;
+	char *shell_argv[4];
 	enum {
 		OPT_a = (1 << 0),
 		OPT_c = (1 << 1),
@@ -235,6 +237,18 @@ int script_main(int argc UNUSED_PARAM, char **argv)
 
 	/* Non-ignored signals revert to SIG_DFL on exec anyway */
 	/*signal(SIGCHLD, SIG_DFL);*/
-	execl(shell, shell, shell_opt, shell_arg, (char *) NULL);
-	bb_simple_perror_msg_and_die(shell);
+
+	/* copy shell argument, we don't want it to be modified. */
+	shell_copy = xstrdup(shell);
+
+	shell_argv[0] = shell_copy;
+	shell_argv[1] = shell_opt;
+	shell_argv[2] = shell_arg;
+	shell_argv[3] = NULL;
+	bb_execvp_or_die(shell_argv);
+
+	/* free copied shell */
+	free(shell_copy);
+
+	return -1;
 }

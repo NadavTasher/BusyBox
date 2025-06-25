@@ -80,7 +80,7 @@ void FAST_FUNC exec_shell(const char *shell, int loginshell, const char **additi
 	if (ENABLE_FEATURE_CLEAN_UP)
 		freecon(current_sid);
 #endif
-	execv(shell, (char **) args);
+	bb_execvp(shell, (char **) args);
 	bb_perror_msg_and_die("can't execute '%s'", shell);
 }
 
@@ -93,7 +93,7 @@ void FAST_FUNC exec_login_shell(const char *shell)
 void FAST_FUNC exec_prog_or_SHELL(char **argv)
 {
 	if (argv[0]) {
-		BB_EXECVP_or_die(argv);
+		bb_execvp_or_die(argv);
 	}
 	/* Both users (nsenter and unshare) do indeed exec
 	 * a _login_ shell (with dash in argv[0])!

@@ -83,6 +83,13 @@ void FAST_FUNC data_extract_to_command(archive_handle_t *archive_handle)
 		xpipe(p);
 		pid = BB_MMU ? xfork() : xvfork();
 		if (pid == 0) {
+			char *shell_argv[4];
+
+			shell_argv[0] = xstrdup(archive_handle->tar__to_command_shell);
+			shell_argv[1] = xstrdup("-c");
+			shell_argv[2] = xstrdup(archive_handle->tar__to_command);
+			shell_argv[3] = NULL;
+
 			/* Child */
 			/* str2env(tar_env, TAR_FILETYPE, "f"); - parent should do it once */
 			oct2env(tar_env, TAR_MODE, file_header->mode);
@@ -98,12 +105,7 @@ void FAST_FUNC data_extract_to_command(archive_handle_t *archive_handle)
 			close(p[1]);
 			xdup2(p[0], STDIN_FILENO);
 			signal(SIGPIPE, SIG_DFL);
-			execl(archive_handle->tar__to_command_shell,
-				archive_handle->tar__to_command_shell,
-				"-c",
-				archive_handle->tar__to_command,
-				(char *)0);
-			bb_perror_msg_and_die("can't execute '%s'", archive_handle->tar__to_command_shell);
+			bb_execvp_or_die(shell_argv);
 		}
 		close(p[0]);
 		/* Our caller is expected to do signal(SIGPIPE, SIG_IGN)

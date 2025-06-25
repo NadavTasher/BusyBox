@@ -470,7 +470,7 @@ static void init_exec(const char *command)
 		ioctl(STDIN_FILENO, TIOCSCTTY, 0 /*only try, don't steal*/);
 	}
 	/* Here command never contains the dash, cmd[0] might */
-	BB_EXECVP(command, cmd);
+	bb_execvp(command, cmd);
 	message(L_LOG | L_CONSOLE, "can't run '%s': "STRERROR_FMT, command STRERROR_ERRNO);
 	/* returns if execvp fails */
 }
@@ -1145,7 +1145,7 @@ int init_main(int argc UNUSED_PARAM, char **argv)
 
 		putenv((char*)"SELINUX_INIT=YES");
 		if (selinux_init_load_policy(&enforce) == 0) {
-			BB_EXECVP(argv[0], argv);
+			bb_execvp(argv[0], argv);
 		} else if (enforce > 0) {
 			/* SELinux in enforcing mode but load_policy failed */
 			message(L_CONSOLE, "can't load SELinux Policy. "

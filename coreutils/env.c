@@ -89,7 +89,7 @@ int env_main(int argc UNUSED_PARAM, char **argv)
 	}
 
 	if (argv[0]) {
-		BB_EXECVP_or_die(argv);
+		bb_execvp_or_die(argv);
 	}
 
 	if (environ) { /* clearenv() may set environ == NULL! */

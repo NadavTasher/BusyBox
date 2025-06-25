@@ -281,7 +281,7 @@ int switch_root_main(int argc UNUSED_PARAM, char **argv)
 			return 0;
 	} else {
 		// Exec NEW_INIT
-		execv(argv[0], argv);
+		bb_execvp(argv[0], argv);
 	}
 	bb_perror_msg_and_die("can't execute '%s'", argv[0]);
 }

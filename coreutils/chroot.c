@@ -51,5 +51,5 @@ int chroot_main(int argc UNUSED_PARAM, char **argv)
 		/*argv[2] = NULL; - already is */
 	}
 
-	BB_EXECVP_or_die(argv);
+	bb_execvp_or_die(argv);
 }

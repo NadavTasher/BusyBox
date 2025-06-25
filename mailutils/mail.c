@@ -71,7 +71,7 @@ void FAST_FUNC launch_helper(const char **argv)
 #endif
 		// try to execute connection helper
 		// NB: SIGCHLD & SIGALRM revert to SIG_DFL on exec
-		BB_EXECVP_or_die((char**)argv);
+		bb_execvp_or_die((char **) argv);
 	}
 	G.helper_pid = pid;
 	close(child_out.wr);

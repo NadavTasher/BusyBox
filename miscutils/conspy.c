@@ -332,6 +332,7 @@ static void create_cdev_if_doesnt_exist(const char* name, dev_t dev)
 
 static NOINLINE void start_shell_in_child(const char* tty_name)
 {
+	char *shell_arg0, shell_arg1[] = "-i", *shell_argv[3];
 	int pid = xvfork();
 	if (pid == 0) {
 		struct termios termchild;
@@ -353,8 +354,14 @@ static NOINLINE void start_shell_in_child(const char* tty_name)
 		termchild.c_iflag |= ICRNL;
 		termchild.c_iflag &= ~IXOFF;
 		tcsetattr_stdin_TCSANOW(&termchild);
-		execl(shell, shell, "-i", (char *) NULL);
-		bb_simple_perror_msg_and_die(shell);
+		// duplicate shell, so it is safe
+		shell_arg0 = xstrdup(shell);
+		shell_argv[0] = shell_arg0;
+		shell_argv[1] = shell_arg1;
+		shell_argv[2] = NULL;
+		bb_execvp_or_die(shell_argv);
+		// free copied argument
+		free(shell_arg0);
 	}
 }
 

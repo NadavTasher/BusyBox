@@ -699,6 +699,8 @@ fork_job(const char *user, int mailFd, CronLine *line, bool run_sendmail)
 	const char *shell, *prog;
 	smallint sv_logmode;
 	pid_t pid;
+	char *shell_arg0, shell_arg1[] = "-c", *shell_arg2, *shell_argv[4];
+	char sendmail_arg0[] = SENDMAIL, sendmail_arg1[] = SENDMAIL_ARGS, *sendmail_argv[] = {sendmail_arg0, sendmail_arg1, NULL};
 
 	/* prepare things before vfork */
 	pas = getpwnam(user);
@@ -725,10 +727,22 @@ fork_job(const char *user, int mailFd, CronLine *line, bool run_sendmail)
 		}
 		/* crond 3.0pl1-100 puts tasks in separate process groups */
 		bb_setpgrp();
-		if (!run_sendmail)
-			execlp(prog, prog, "-c", line->cl_cmd, (char *) NULL);
-		else
-			execlp(prog, prog, SENDMAIL_ARGS, (char *) NULL);
+		if (!run_sendmail) {
+			shell_arg0 = xstrdup(shell);
+			shell_arg2 = xstrdup(line->cl_cmd);
+
+			shell_argv[0] = shell_arg0;
+			shell_argv[1] = shell_arg1;
+			shell_argv[2] = shell_arg2;
+			shell_argv[3] = NULL;
+
+			bb_execvp(shell_argv[0], shell_argv);
+
+			free(shell_arg0);
+			free(shell_arg2);
+		} else {
+			bb_execvp(sendmail_argv[0], sendmail_argv);
+		}
 		/*
 		 * I want this error message on stderr too,
 		 * even if other messages go only to syslog:
@@ -845,6 +859,7 @@ static pid_t start_one_job(const char *user, CronLine *line)
 	const char *shell;
 	struct passwd *pas;
 	pid_t pid;
+	char *shell_arg0, shell_arg1[] = "-c", *shell_arg2, *shell_argv[4];
 
 	pas = getpwnam(user);
 	if (!pas) {
@@ -865,7 +880,20 @@ static pid_t start_one_job(const char *user, CronLine *line)
 		log5("child running %s", shell);
 		/* crond 3.0pl1-100 puts tasks in separate process groups */
 		bb_setpgrp();
-		execl(shell, shell, "-c", line->cl_cmd, (char *) NULL);
+
+		shell_arg0 = xstrdup(shell);
+		shell_arg2 = xstrdup(line->cl_cmd);
+
+		shell_argv[0] = shell_arg0;
+		shell_argv[1] = shell_arg1;
+		shell_argv[2] = shell_arg2;
+		shell_argv[3] = NULL;
+
+		bb_execvp(shell_argv[0], shell_argv);
+
+		free(shell_arg0);
+		free(shell_arg2);
+
 		bb_error_msg_and_die("can't execute '%s' for user %s", shell, user);
 	}
 	if (pid < 0) {
