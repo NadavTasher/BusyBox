@@ -1247,6 +1247,7 @@ int BB_EXECVP(const char *file, char *const argv[]) FAST_FUNC;
 #endif
 void BB_EXECVP_or_die(char **argv) NORETURN FAST_FUNC;
 
+#if !BB_MMU
 /* xvfork() can't be a _function_, return after vfork in child mangles stack
  * in the parent. It must be a macro. */
 #define xvfork() \
@@ -1256,8 +1257,13 @@ void BB_EXECVP_or_die(char **argv) NORETURN FAST_FUNC;
 		bb_simple_perror_msg_and_die("vfork"); \
 	bb__xvfork_pid; \
 })
-#if BB_MMU
+#else
 pid_t xfork(void) FAST_FUNC;
+
+/* fork() is compliant with vfork().
+ * using fork instead of vfork on MMU-enabled targets makes the entire program
+ * a little safer. */
+#define xvfork() xfork()
 #endif
 void xvfork_parent_waits_and_exits(void) FAST_FUNC;
 
