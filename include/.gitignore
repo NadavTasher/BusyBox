@@ -10,3 +10,5 @@
 /usage_compressed.h
 /usage.h
 /common_bufsiz.h*
+/ash_aliases.h
+/hush_aliases.h

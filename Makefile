@@ -851,13 +851,16 @@ quiet_cmd_gen_common_bufsiz = GEN     include/common_bufsiz.h
       cmd_gen_common_bufsiz = $(srctree)/scripts/generate_BUFSIZ.sh include/common_bufsiz.h
 quiet_cmd_split_autoconf   = SPLIT   include/autoconf.h -> include/config/*
       cmd_split_autoconf   = scripts/basic/split-include include/autoconf.h include/config
+quiet_cmd_gen_shell_aliases = GEN     include/ash_aliases.h include/hush_aliases.h
+      cmd_gen_shell_aliases = $(srctree)/scripts/shell_aliases include/ash_aliases.h include/hush_aliases.h
 quiet_cmd_gen_embedded_scripts = GEN     include/embedded_scripts.h
       cmd_gen_embedded_scripts = $(srctree)/scripts/embedded_scripts include/embedded_scripts.h $(srctree)/embed $(srctree)/applets_sh
 #bbox# piggybacked generation of few .h files
-include/config/MARKER: scripts/basic/split-include include/autoconf.h $(wildcard $(srctree)/embed/*) $(wildcard $(srctree)/applets_sh/*) $(srctree)/scripts/embedded_scripts
+include/config/MARKER: scripts/basic/split-include include/autoconf.h $(wildcard $(srctree)/embed/*) $(wildcard $(srctree)/applets_sh/*) $(srctree)/scripts/shell_aliases $(srctree)/scripts/embedded_scripts
 	$(call cmd,split_autoconf)
 	$(call cmd,gen_bbconfigopts)
 	$(call cmd,gen_common_bufsiz)
+	$(call cmd,gen_shell_aliases)
 	$(call cmd,gen_embedded_scripts)
 	@touch $@
 
@@ -984,6 +987,8 @@ MRPROPER_FILES += .config .config.old include/asm .version .old_version \
 		  include/applet_tables.h \
 		  include/applets.h \
 		  include/usage.h \
+		  include/ash_aliases.h \
+		  include/hush_aliases.h \
 		  applets/usage \
 		  .kernelrelease Module.symvers tags TAGS cscope* \
 		  busybox_old
