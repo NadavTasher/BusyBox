@@ -323,12 +323,24 @@
 //config:	default n
 //config:	depends on SHELL_HUSH
 //config:
+//config:config EXTRA_HUSH_ALIASES
+//config:	string "extra aliases"
+//config:	default ""
+//config:	depends on SHELL_HUSH
+//config:	help
+//config:	Extra names for hush (applet names), separated
+//config:	by a space.
+//config:
 //config:endif # hush options
 
 //applet:IF_HUSH(APPLET(hush, BB_DIR_BIN, BB_SUID_DROP))
 //                       APPLET_ODDNAME:name  main  location    suid_type     help
 //applet:IF_SH_IS_HUSH(  APPLET_ODDNAME(sh,   hush, BB_DIR_BIN, BB_SUID_DROP, hush))
 //applet:IF_BASH_IS_HUSH(APPLET_ODDNAME(bash, hush, BB_DIR_BIN, BB_SUID_DROP, hush))
+//
+//applet:#if ENABLE_EXTRA_HUSH_ALIASES
+//applet:# include "hush_aliases.h"
+//applet:#endif
 
 //kbuild:lib-$(CONFIG_SHELL_HUSH) += hush.o match.o shell_common.o
 //kbuild:lib-$(CONFIG_HUSH_RANDOM_SUPPORT) += random.o

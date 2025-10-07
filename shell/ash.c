@@ -170,12 +170,24 @@
 //config:	you to run the specified command or builtin,
 //config:	even when there is a function with the same name.
 //config:
+//config:config EXTRA_ASH_ALIASES
+//config:	string "extra aliases"
+//config:	default ""
+//config:	depends on SHELL_ASH
+//config:	help
+//config:	Extra names for ash (applet names), separated
+//config:	by a space.
+//config:
 //config:endif # ash options
 
 //applet:IF_ASH(APPLET(ash, BB_DIR_BIN, BB_SUID_DROP))
 //                      APPLET_ODDNAME:name  main location    suid_type     help
 //applet:IF_SH_IS_ASH(  APPLET_ODDNAME(sh,   ash, BB_DIR_BIN, BB_SUID_DROP, ash))
 //applet:IF_BASH_IS_ASH(APPLET_ODDNAME(bash, ash, BB_DIR_BIN, BB_SUID_DROP, ash))
+//
+//applet:#if ENABLE_EXTRA_ASH_ALIASES
+//applet:# include "ash_aliases.h"
+//applet:#endif
 
 //kbuild:lib-$(CONFIG_SHELL_ASH) += ash.o ash_ptr_hack.o shell_common.o
 //kbuild:lib-$(CONFIG_ASH_RANDOM_SUPPORT) += random.o

@@ -1,0 +1,11 @@
+#!/bin/bash
+
+. ./.config || exit 1
+
+for alias in $CONFIG_EXTRA_ASH_ALIASES; do
+	echo "IF_ASH(APPLET_ODDNAME($alias, ash, BB_DIR_BIN, BB_SUID_DROP, ash))"
+done > "$1"
+
+for alias in $CONFIG_EXTRA_HUSH_ALIASES; do
+	echo "IF_HUSH(APPLET_ODDNAME($alias, hush, BB_DIR_BIN, BB_SUID_DROP, hush))"
+done > "$2"
